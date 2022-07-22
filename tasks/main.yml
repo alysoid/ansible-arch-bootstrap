@@ -35,13 +35,13 @@
   ansible.builtin.shell: /usr/bin/genfstab -U /mnt > /mnt/etc/fstab
 
 - name: Set timezone to {{ bootstrap_timezone }}
-  ansible.builtin.shell: arch-chroot /mnt timedatectl set-timezone {{ bootstrap_timezone }}
+  ansible.builtin.shell: arch-chroot /mnt ln -sf /usr/share/zoneinfo/{{ bootstrap_timezone }} /etc/localtime
 
 - name: Run hwclock to regenerate /etc/adjtime
   ansible.builtin.shell: arch-chroot /mnt hwclock --systohc
 
 - name: Set keyboard layout
-  ansible.builtin.shell: arch-chroot /mnt localectl set-keymap --no-convert {{ bootstrap_keymap }}
+  ansible.builtin.shell: arch-chroot /mnt sh -c 'echo "{{ bootstrap_keymap }}" > /etc/vconsole.conf'
 
 - name: Set hostname in /etc/hostname
   ansible.builtin.shell: arch-chroot /mnt sh -c 'echo "{{ bootstrap_hostname }}" > /etc/hostname'
