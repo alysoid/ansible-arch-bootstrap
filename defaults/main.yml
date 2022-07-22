@@ -9,8 +9,9 @@ bootstrap_keymap: us
 # Target system hostname
 bootstrap_hostname: arch
 
-# Root password for the first login after reboot
+# Root password and SSH key for access after reboot
 bootstrap_root_pass: root
+bootstrap_root_key_file: ~/.ssh/id_ed25519.pub
 
 # BE CAREFUL, see README.MD > Initialize system disk
 bootstrap_init_disk: false
@@ -38,3 +39,4 @@ bootstrap_packages:
   - man-db
   - man-pages
   - bash-completion
+  - openssh

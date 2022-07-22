@@ -69,9 +69,6 @@
     - arch
     - arch-fallback
 
-- name: Update root password
-  ansible.builtin.shell: arch-chroot /mnt sh -c 'echo root:"{{ bootstrap_root_pass }}" | chpasswd'
-
 # Configure the network
 # https://wiki.archlinux.org/title/systemd-resolved
 # https://wiki.archlinux.org/title/systemd-networkd
@@ -83,3 +80,17 @@
 
 - name: Copy systemd-networkd default configuration files
   ansible.builtin.shell: rsync -a /etc/systemd/network/* /mnt/etc/systemd/network/
+
+# Enable OpenSSH server and configure access for root
+
+- name: Enable OpenSSH server service
+  ansible.builtin.shell: arch-chroot /mnt systemctl enable sshd.service
+
+- name: Copy SSH authorized keys for remote access
+  ansible.builtin.shell: >
+    mkdir -p /mnt/root/.ssh && chmod 700 /mnt/root/.ssh
+    && sh -c 'echo "{{ lookup('file', bootstrap_root_key_file) }}" >> /mnt/root/.ssh/authorized_keys'
+    && chmod 600 /mnt/root/.ssh/authorized_keys
+
+- name: Update root password
+  ansible.builtin.shell: arch-chroot /mnt sh -c 'echo root:"{{ bootstrap_root_pass }}" | chpasswd'
