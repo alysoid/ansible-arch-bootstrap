@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# See loader.conf(5) for details.
+
+title Arch Linux
+linux /vmlinuz-linux
+initrd /{{ platform }}-ucode.img
+initrd /initramfs-linux.img
+options rootfstype=btrfs rootflags=subvol=@ root=LABEL=ArchLinux

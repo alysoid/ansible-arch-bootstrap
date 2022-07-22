@@ -1,0 +1,40 @@
+---
+# Default to Coordinated Universal Time
+bootstrap_timezone: Etc/UTC
+
+# Keyboard mappings (keymaps) for the Linux console
+# https://wiki.archlinux.org/title/Linux_console/Keyboard_configuration
+bootstrap_keymap: us
+
+# Target system hostname
+bootstrap_hostname: arch
+
+# Root password for the first login after reboot
+bootstrap_root_pass: root
+
+# BE CAREFUL, see README.MD > Initialize system disk
+bootstrap_init_disk: false
+bootstrap_root_device: /dev/vda
+
+# 'linux' :: Stable — Vanilla Linux kernel
+# 'linux-lts' :: Longterm — Long-term support (LTS) Linux kernel
+# 'linux-hardened' :: Hardened — A security-focused Linux kernel
+# 'linux-zen' :: Result of a collaborative effort of kernel hackers
+# https://wiki.archlinux.org/title/kernel#Officially_supported_kernels
+bootstrap_kernel: linux
+
+# Base packages installed using the 'pacstrap' script
+bootstrap_packages:
+  - base
+  - base-devel
+  - efibootmgr
+  - btrfs-progs
+  - nfs-utils
+  - usbutils
+  - python
+  - ansible
+  - sudo
+  - nano
+  - man-db
+  - man-pages
+  - bash-completion

@@ -1,0 +1,85 @@
+---
+# Partition the disks, format the partitions, mount the file systems
+# See README.md > Initialize system disk
+
+- name: Partition, format and mount the system disk
+  ansible.builtin.script: scripts/init_disk.sh {{ bootstrap_root_device }}
+  when: bootstrap_init_disk is true
+
+# Install essential packages with pacstrap script
+# https://wiki.archlinux.org/title/installation_guide#Installation
+
+- name: Install base system with pacstrap
+  ansible.builtin.shell: /usr/bin/pacstrap /mnt {{ bootstrap_packages | join(' ') }}
+
+- name: Install {{ linux }} kernel with pacstrap
+  ansible.builtin.shell: /usr/bin/pacstrap /mnt {{ linux }} {{ linux }}-headers linux-firmware
+  vars:
+    linux: "{{ bootstrap_kernel }}"
+
+- name: Evaluate system CPU
+  ansible.builtin.shell: cat /proc/cpuinfo | grep vendor_id | head -n1 | awk '{print $3}'
+  register: cpu_type
+
+- name: Set current platform
+  ansible.builtin.set_fact:
+    platform: "{{ 'amd' if cpu_type.stdout == 'AuthenticAMD' else 'intel' }}"
+
+- name: Install Microcode for {{ platform }} processor with pacstrap
+  ansible.builtin.shell: /usr/bin/pacstrap /mnt {{ platform }}-ucode
+
+# Configure the system
+# https://wiki.archlinux.org/title/installation_guide#Configure_the_system
+
+- name: Generate base system fstab with genfstab
+  ansible.builtin.shell: /usr/bin/genfstab -U /mnt > /mnt/etc/fstab
+
+- name: Set timezone to {{ bootstrap_timezone }}
+  ansible.builtin.shell: arch-chroot /mnt timedatectl set-timezone {{ bootstrap_timezone }}
+
+- name: Run hwclock to regenerate /etc/adjtime
+  ansible.builtin.shell: arch-chroot /mnt hwclock --systohc
+
+- name: Set keyboard layout
+  ansible.builtin.shell: arch-chroot /mnt localectl set-keymap --no-convert {{ bootstrap_keymap }}
+
+- name: Set hostname in /etc/hostname
+  ansible.builtin.shell: arch-chroot /mnt sh -c 'echo "{{ bootstrap_hostname }}" > /etc/hostname'
+
+# Configure the bootloader
+# https://wiki.archlinux.org/title/Systemd-boot
+
+- name: Install systemd-boot EFI boot manager
+  ansible.builtin.shell: arch-chroot /mnt bootctl install
+
+- name: Configure systemd-boot loader
+  ansible.builtin.template:
+    src: loader.conf.j2
+    dest: /mnt/boot/loader.conf
+    owner: root
+    mode: "0755"
+
+- name: Configure systemd-boot entries
+  ansible.builtin.template:
+    src: "{{ item }}.conf.j2"
+    dest: /mnt/boot/loader/entries/{{ item }}.conf
+    owner: root
+    mode: "0755"
+  loop:
+    - arch
+    - arch-fallback
+
+- name: Update root password
+  ansible.builtin.shell: arch-chroot /mnt sh -c 'echo root:"{{ bootstrap_root_pass }}" | chpasswd'
+
+# Configure the network
+# https://wiki.archlinux.org/title/systemd-resolved
+# https://wiki.archlinux.org/title/systemd-networkd
+
+- name: Enable systemd-resolved and systemd-networkd services
+  ansible.builtin.shell: |
+    arch-chroot /mnt systemctl enable systemd-resolved.service
+    arch-chroot /mnt systemctl enable systemd-networkd.service
+
+- name: Copy systemd-networkd default configuration files
+  ansible.builtin.shell: rsync -a /etc/systemd/network/* /mnt/etc/systemd/network/
