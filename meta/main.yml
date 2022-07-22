@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: Andrea Brandi
+  description: Install a new Arch Linux system via SSH with Ansible.
+  license: MIT
+
+  min_ansible_version: 2.1
+
+  platforms:
+    - name: ArchLinux
+      versions:
+        - all
+
+  galaxy_tags:
+    - linux
+    - system
+    - bootstrap
+
+dependencies: []
