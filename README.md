@@ -6,7 +6,7 @@ Collection of Ansible tasks and scripts to bootstrap a new Arch Linux system.
 - Mount `boot` partition and `root` Btrfs with subvolumes.
 - Create `swapfile` on `@swap` subvolume in `root` partition.
 - Install the Linux kernel and custom essential packages.
-- Install and configure the `systemd-boot` EFI boot manager.
+- Install and configure `systemd-boot` EFI boot manager.
 
 ## Install Arch Linux with Ansible
 
@@ -23,7 +23,7 @@ Done. But first take a look at `defaults/main.yml` and carefully read the docume
 ### Example Playbook
 
 ```yaml
-# playbook.yml
+# bootstrap.yml
 - name: Arch Linux Bootstrap
   hosts: "{{ target_ip_address }}"
   roles:
@@ -73,7 +73,7 @@ Next, it creates these subvolumes on the partition 2:
 - `subvol=@log` mounted on `/mnt/var/log`
 - `subvol=@swap` mounted on `/mnt/swap` (with NOCOW attribute)
 
-The `@swap` subvolume has a 2 GiB enabled `swapfile` inside and will be mounted with these options: `defaults,noatime,ssd,discard=async`. All the other subvolumes will have the same options plus `compress=zstd:3`.
+All the subvolumes have these mount options: `defaults,noatime,ssd,discard=async,compress=zstd:3`. The `@swap` subvolume has the `NOCOW` attribute and a 2 GiB enabled `swapfile` on it.
 
 ## Install essential packages
 
@@ -94,6 +94,7 @@ bootstrap_packages:
   - man-db
   - man-pages
   - bash-completion
+  - openssh
 
 bootstrap_kernel: linux
 ```
