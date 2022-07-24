@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[ -z $1 ] && printf "usage: init_disk.sh /dev/sdx\n" && exit 1;
+[ -z $1 ] && printf "usage: disk_init.sh /dev/sdx\n" && exit 1;
 [ ! -b $1 ] && printf "error: target disk does not exist!\n" && exit 1;
 
 # Disk settings

@@ -3,8 +3,8 @@
 # See README.md > Initialize system disk
 
 - name: Partition, format and mount the system disk
-  ansible.builtin.script: scripts/init_disk.sh {{ bootstrap_root_device }}
-  when: bootstrap_init_disk is true
+  ansible.builtin.script: scripts/disk_init.sh {{ bootstrap_root_device }}
+  tags: [never, disk_init]
 
 # Install essential packages with pacstrap script
 # https://wiki.archlinux.org/title/installation_guide#Installation

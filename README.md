@@ -13,8 +13,9 @@ Collection of Ansible tasks and scripts to bootstrap a new Arch Linux system.
 When the Live CD is booted and an SSH server is operating on the target machine:
 
 ```shell
-# On an existing Arch Linux system
+# Required packages on an existing Arch Linux system
 $ sudo pacman -S ansible sshpass
+# Adding `-t disk_init` is required for system disk initialization, see below
 $ ansible-playbook --user root --ask-pass -i {target_ip_address}, bootstrap.yml
 ```
 
@@ -53,13 +54,13 @@ Connect to the target machine via SSH with `ssh root@{target_ip_address}`.
 
 ## Initialize system disk
 
-This procedure is fully automated using a Bash script called via Ansible that will run when `bootstrap_init_disk` is `true`, but as a matter of caution this is `false` by default. Be sure you 100% understand how the `files/init_disk.sh` script works before enabling this function. In short, the script erase the target system disk, create a new GPT partition table, format partitions and mount file systems in `/mnt`.
+The procedure is automated using a shell script called via Ansible that, as a matter of caution, will run only when the tag `disk_init` is explictly passed via Ansible. Be sure you 100% understand how the `files/disk_init.sh` script works before running it. In short, the script erase the target system disk, create a new GPT partition table, format partitions and mount file systems in `/mnt`.
 
 You may prefer to do these steps manually or customize the script according to your preferences.
 
 ### Partition, format and mount
 
-Following my preferences, the script creates this disk layout:
+Following personal preferences, the script creates this disk layout:
 
 1. GPT Partition table with MBR protective
 2. Partition 1: EFI fat32 @ 550 MiB (Label `BOOT`)
@@ -103,7 +104,7 @@ The default EFI boot manager is `systemd-boot` ready to operate with a default `
 
 ## Final steps
 
-When the bootstrap procedure is done, SSH into the machine and execute `arch-chroot /mnt` to check that everything is all right. It is recommended checking at least `/etc/fstab` and systemd-boot configuration files: `/boot/loader.conf`, `/boot/entries/arch.conf` before exiting the chroot environment with:
+When the bootstrap procedure is done, SSH into the machine and execute `arch-chroot /mnt` to check that everything is all right. It is recommended checking at least `/etc/fstab` before exiting and rebooting:
 
 ```shell
 $ exit
