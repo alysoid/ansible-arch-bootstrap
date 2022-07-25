@@ -1,19 +1,40 @@
 ---
 # Default to Coordinated Universal Time
-bootstrap_timezone: Etc/UTC
+# For a list of all available timezones,
+# use the command `timedatectl list-timezones`.
+bootstrap_timezone: UTC
+
+# System/Server hostname
+bootstrap_hostname: "{{ ansible_fqdn }}"
+
+# Array of hostname aliases
+bootstrap_hostname_aliases: []
 
 # Keyboard mappings (keymaps) for the Linux console
 # https://wiki.archlinux.org/title/Linux_console/Keyboard_configuration
 bootstrap_keymap: us
 
-# Target system hostname
-bootstrap_hostname: arch
+# Default locale with `LANG` environment variable
+# Used to print out messages in the chosen language.
+# Set all the LC_* variables that are not explicitly set.
+# https://wiki.archlinux.org/title/locale#LANG:_default_locale
+bootstrap_lang: en_US.UTF-8
+
+# Fallback locale with `LANGUAGE` environment variable
+# Specify the order of languages when a translation is unavailable.
+# https://wiki.archlinux.org/title/locale#LANGUAGE:_fallback_locales
+bootstrap_language: en_US:en
+
+#
+# Installation from Arch Live CD
+# See INSTALL.md for details.
+#
 
 # Root password and SSH key for access after reboot
 bootstrap_root_pass: root
 bootstrap_root_key_file: ~/.ssh/id_ed25519.pub
 
-# BE CAREFUL, see README.MD > Initialize system disk
+# BE CAREFUL, see INSTALL.md > Initialize system disk
 bootstrap_root_device: /dev/vda
 
 # 'linux' :: Stable — Vanilla Linux kernel

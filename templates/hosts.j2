@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# Static table lookup for hostnames.
+# See hosts(5) for details.
+
+127.0.0.1  localhost
+127.0.1.1  {{ bootstrap_hostname }} {{ bootstrap_hostname | join(' ') }}
+::1        localhost ip6-localhost ip6-loopback
+ff02::1    ip6-allnodes
+ff02::2    ip6-allrouters

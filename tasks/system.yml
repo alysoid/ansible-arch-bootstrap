@@ -1,0 +1,40 @@
+---
+- name: Set timezone to {{ bootstrap_timezone }}
+  community.general.timezone:
+    name: "{{ bootstrap_timezone }}"
+
+- name: Set hostname via systemd
+  ansible.builtin.hostname:
+    name: "{{ bootstrap_hostname }}"
+    use: systemd
+
+- name: Inject hostname and aliases to hosts file
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+
+- name: Generate locale for '{{ bootstrap_lang }}'
+  ansible.builtin.locale_gen:
+    name: "{{ bootstrap_lang }}"
+    state: present
+
+- name: Check localectl status
+  ansible.builtin.command: localectl status
+  register: localectl_status
+  changed_when: false
+
+- name: Get current system settings
+  ansible.builtin.set_fact:
+    keymap_current: "{{ localectl_status.stdout | regex_search('VC Keymap: ([^\n]+)', '\\1') | first }}"
+    lang_current: "{{ localectl_status.stdout | regex_search('LANG=([^\n]+)', '\\1') | first }}"
+    language_current: "{{ localectl_status.stdout | regex_search('LANGUAGE=([^\n]+)', '\\1') | default([locale], true) | first }}"
+  vars:
+    locale: "{{ bootstrap_lang }}"
+
+- name: Set LANG to '{{ bootstrap_lang }}', LANGUAGE to '{{ bootstrap_language }}'
+  ansible.builtin.command: localectl set-locale LANG={{ bootstrap_lang }} LANGUAGE={{ bootstrap_language }}
+  when: lang_current != bootstrap_lang or language_current != bootstrap_language
+
+- name: Set keyboard layout
+  ansible.builtin.command: localectl set-keymap --no-convert {{ bootstrap_keymap }}
+  when: keymap_current != bootstrap_keymap

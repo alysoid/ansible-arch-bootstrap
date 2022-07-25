@@ -1,0 +1,113 @@
+---
+# Partition the disks, format the partitions, mount the file systems
+# See README.md > Initialize system disk
+- name: Partition, format and mount the system disk
+  ansible.builtin.script: scripts/disk_init.sh {{ bootstrap_root_device }}
+  tags: [never, disk_init]
+
+# Install essential packages with pacstrap script
+# https://wiki.archlinux.org/title/installation_guide#Installation
+
+- name: Install base system with pacstrap
+  ansible.builtin.shell: /usr/bin/pacstrap /mnt {{ bootstrap_packages | join(' ') }}
+  tags: archiso
+
+- name: Install {{ linux }} kernel with pacstrap
+  ansible.builtin.shell: /usr/bin/pacstrap /mnt {{ linux }} {{ linux }}-headers linux-firmware
+  vars:
+    linux: "{{ bootstrap_kernel }}"
+  tags: archiso
+
+- name: Evaluate system CPU
+  ansible.builtin.shell: cat /proc/cpuinfo | grep vendor_id | head -n1 | awk '{print $3}'
+  register: cpu_type
+  tags: archiso
+
+- name: Set current platform
+  ansible.builtin.set_fact:
+    platform: "{{ 'amd' if cpu_type.stdout == 'AuthenticAMD' else 'intel' }}"
+  tags: archiso
+
+- name: Install Microcode for {{ platform }} processor with pacstrap
+  ansible.builtin.shell: /usr/bin/pacstrap /mnt {{ platform }}-ucode
+  tags: archiso
+
+# Configure the system
+# https://wiki.archlinux.org/title/installation_guide#Configure_the_system
+
+- name: Generate base system fstab with genfstab
+  ansible.builtin.shell: /usr/bin/genfstab -U /mnt > /mnt/etc/fstab
+  tags: archiso
+
+- name: Set timezone to {{ bootstrap_timezone }}
+  ansible.builtin.shell: arch-chroot /mnt ln -sf /usr/share/zoneinfo/{{ bootstrap_timezone }} /etc/localtime
+  tags: archiso
+
+- name: Run hwclock to regenerate /etc/adjtime
+  ansible.builtin.shell: arch-chroot /mnt hwclock --systohc
+  tags: archiso
+
+- name: Set keyboard layout
+  ansible.builtin.shell: arch-chroot /mnt sh -c 'echo "{{ bootstrap_keymap }}" > /etc/vconsole.conf'
+  tags: archiso
+
+- name: Set hostname in /etc/hostname
+  ansible.builtin.shell: arch-chroot /mnt sh -c 'echo "{{ bootstrap_hostname }}" > /etc/hostname'
+  tags: archiso
+
+# Configure the bootloader
+# https://wiki.archlinux.org/title/Systemd-boot
+
+- name: Install systemd-boot EFI boot manager
+  ansible.builtin.shell: arch-chroot /mnt bootctl install
+  tags: archiso
+
+- name: Configure systemd-boot loader
+  ansible.builtin.template:
+    src: systemd-boot/loader.conf.j2
+    dest: /mnt/boot/loader.conf
+    owner: root
+    mode: "0755"
+  tags: archiso
+
+- name: Configure systemd-boot entries
+  ansible.builtin.template:
+    src: systemd-boot/"{{ item }}.conf.j2"
+    dest: /mnt/boot/loader/entries/{{ item }}.conf
+    owner: root
+    mode: "0755"
+  loop:
+    - arch
+    - arch-fallback
+  tags: archiso
+
+# Configure the network
+# https://wiki.archlinux.org/title/systemd-resolved
+# https://wiki.archlinux.org/title/systemd-networkd
+
+- name: Enable systemd-resolved and systemd-networkd services
+  ansible.builtin.shell: |
+    arch-chroot /mnt systemctl enable systemd-resolved.service
+    arch-chroot /mnt systemctl enable systemd-networkd.service
+  tags: archiso
+
+- name: Copy systemd-networkd default configuration files
+  ansible.builtin.shell: rsync -a /etc/systemd/network/* /mnt/etc/systemd/network/
+  tags: archiso
+
+# Enable OpenSSH server and configure access for root
+
+- name: Enable OpenSSH server service
+  ansible.builtin.shell: arch-chroot /mnt systemctl enable sshd.service
+  tags: archiso
+
+- name: Copy SSH authorized keys for remote access
+  ansible.builtin.shell: >
+    mkdir -p /mnt/root/.ssh && chmod 700 /mnt/root/.ssh
+    && sh -c 'echo "{{ lookup('file', bootstrap_root_key_file) }}" >> /mnt/root/.ssh/authorized_keys'
+    && chmod 600 /mnt/root/.ssh/authorized_keys
+  tags: archiso
+
+- name: Update root password
+  ansible.builtin.shell: arch-chroot /mnt sh -c 'echo root:"{{ bootstrap_root_pass }}" | chpasswd'
+  tags: archiso
