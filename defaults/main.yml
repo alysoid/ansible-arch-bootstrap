@@ -5,7 +5,7 @@
 bootstrap_timezone: UTC
 
 # System/Server hostname
-bootstrap_hostname: "{{ ansible_fqdn }}"
+bootstrap_hostname: arch
 
 # Array of hostname aliases
 bootstrap_hostname_aliases: []
@@ -47,16 +47,4 @@ bootstrap_kernel: linux
 # Base packages installed using the 'pacstrap' script
 bootstrap_packages:
   - base
-  - base-devel
-  - efibootmgr
-  - btrfs-progs
-  - nfs-utils
-  - usbutils
-  - python
-  - ansible
-  - sudo
-  - nano
-  - man-db
-  - man-pages
-  - bash-completion
   - openssh

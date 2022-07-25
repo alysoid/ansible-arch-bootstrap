@@ -73,18 +73,6 @@ Essential packages are installed using the `pacstrap` script as suggested by the
 ```yaml
 bootstrap_packages:
   - base
-  - base-devel
-  - efibootmgr
-  - btrfs-progs
-  - nfs-utils
-  - usbutils
-  - python
-  - ansible
-  - sudo
-  - nano
-  - man-db
-  - man-pages
-  - bash-completion
   - openssh
 
 bootstrap_kernel: linux
