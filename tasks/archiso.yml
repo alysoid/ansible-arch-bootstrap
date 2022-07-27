@@ -72,7 +72,7 @@
 
 - name: Configure systemd-boot entries
   ansible.builtin.template:
-    src: systemd-boot/"{{ item }}.conf.j2"
+    src: "systemd-boot/{{ item }}.conf.j2"
     dest: /mnt/boot/loader/entries/{{ item }}.conf
     owner: root
     mode: "0755"
