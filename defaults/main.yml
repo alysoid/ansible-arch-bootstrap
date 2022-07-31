@@ -48,3 +48,4 @@ bootstrap_kernel: linux
 bootstrap_packages:
   - base
   - openssh
+  - btrfs-progs
