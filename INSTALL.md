@@ -74,6 +74,7 @@ Essential packages are installed using the `pacstrap` script as suggested by the
 bootstrap_packages:
   - base
   - openssh
+  - btrfs-progs
 
 bootstrap_kernel: linux
 ```
